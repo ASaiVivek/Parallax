@@ -94,3 +94,5 @@ Then, in a **fresh** context, run `synthesis_prompt.md` through the host model f
 ## Installation note
 
 The CLI must be on `PATH` as `parallax`. If it is missing, tell the user to `uv sync` in this repo and `source .venv/bin/activate`, or `uv tool install .`.
+
+Hosts may instead load the **local** stdio MCP (`parallax-mcp`). That process still does not run models. After `prepare`, spawn one fresh context per `perspectives/*.md` file, then call `parallax_synthesize`. See [adapters/README.md](../../adapters/README.md). GitHub pushes do not update a running MCP; the user must upgrade and reload.

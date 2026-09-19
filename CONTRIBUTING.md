@@ -7,6 +7,7 @@ Thank you for helping. The most useful contributions are **new or sharper offset
 - A new catalog offset (`src/parallax/offsets/<id>.json`) with cues, tests, and a mandate that can **disagree**
 - A tighter mandate or better cues for an existing `id` (override, do not fork a duplicate)
 - Protocol or CLI fixes that preserve isolation
+- Local MCP wrappers that shell out to the same CLI operations
 
 What does not belong:
 
@@ -37,7 +38,7 @@ Project-local offsets (not for upstream) go in `.parallax/offsets/` or `PARALLAX
 ## Development setup
 
 ```bash
-uv sync --group dev
+uv sync --extra mcp --group dev
 source .venv/bin/activate
 uv run pytest
 ```

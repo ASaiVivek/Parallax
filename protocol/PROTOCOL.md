@@ -20,9 +20,10 @@ This is distinct from tools like llm-council: the table is not five named member
 | Protocol (this file) | Stable I/O and isolation rules |
 | CLI (`parallax`) | Universal tool: any agent can shell out |
 | Skill (`skills/parallax/SKILL.md`) | Teaches a host agent when and how to use the CLI |
+| Local stdio MCP (`parallax-mcp`) | Optional wrapper on the **consumer machine**; same three operations as the CLI |
 | Dedicated agent | **Not** the primary surface — it would trap the behavior in one product |
 
-MCP, slash commands, and IDE wrappers should call the same CLI. Do not fork the logic per host.
+MCP, slash commands, and IDE wrappers should call the same CLI. Do not fork the logic per host. Local MCP does not auto-update when this repository is pushed; consumers upgrade and reload.
 
 ## Isolation invariants
 

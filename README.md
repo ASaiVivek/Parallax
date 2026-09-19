@@ -95,8 +95,14 @@ question
 | `parallax prepare` | Write isolated prompt packets |
 | `parallax synthesize` | Merge reports into one decision |
 | `parallax catalog` | List builtin and drop-in offsets |
+| `parallax-mcp` | Local stdio MCP (optional extra `mcp`) wrapping interview / prepare / synthesize |
 
 `--catalog DIR` (repeatable) and `PARALLAX_CATALOG_DIR` add extra offset directories. A later source **overrides** the same `id`.
+
+```bash
+uv sync --extra mcp --group dev
+uv run --extra mcp parallax-mcp
+```
 
 ## Use it from an agent
 
@@ -110,7 +116,7 @@ Copy [`skills/parallax/SKILL.md`](skills/parallax/SKILL.md) into the host’s sk
 
 The host must still run each `perspectives/*.md` file in a **separate** subagent or session. MCP or tool wrappers should expose `interview`, `prepare`, and `synthesize` as shells around this CLI — they must not run every offset in one model context.
 
-Host notes: [`adapters/README.md`](adapters/README.md). Wire format: [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md).
+Optional **local stdio MCP** (`parallax-mcp`, extra `mcp`): install on the consumer machine; it wraps those three commands. Pushing this GitHub repo does **not** update their copy — they `git pull` / `uvx --refresh` / pin a published version, then reload MCP. Config snippets: [`adapters/README.md`](adapters/README.md). Wire format: [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md).
 
 ## Builtin offsets
 
@@ -203,7 +209,7 @@ Field-level notes: [`catalog/README.md`](catalog/README.md). Contributor checkli
 ## Development
 
 ```bash
-uv sync --group dev
+uv sync --extra mcp --group dev
 uv run pytest
 uv run parallax catalog
 ```

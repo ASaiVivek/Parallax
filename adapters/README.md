@@ -28,15 +28,58 @@ parallax prepare --brief brief.json --out .parallax/work
 parallax synthesize .parallax/work
 ```
 
-# Generic MCP / tool wrapper
+# Local stdio MCP (v1)
 
-Do not reimplement selection or prompts. Expose three tools that wrap the CLI:
+Parallax can also be a **local** MCP server on the consumer's machine. It wraps the CLI. It does **not** call models and does **not** reimplement roster selection.
 
-1. `parallax_interview` → `parallax interview --brief ...`
-2. `parallax_prepare` → `parallax prepare ...`
-3. `parallax_synthesize` → `parallax synthesize ...`
+A GitHub push does **not** update anyone's install. Each consumer upgrades on their machine, then reloads the MCP process in the host.
+
+## What to add to the host
+
+Cursor (`~/.cursor/mcp.json` or project `.cursor/mcp.json`) and Claude Code use the same stdio shape:
+
+From a clone (what you pull is what you run):
+
+```json
+{
+  "mcpServers": {
+    "parallax": {
+      "command": "uv",
+      "args": ["run", "--extra", "mcp", "parallax-mcp"],
+      "cwd": "/absolute/path/to/Parallax"
+    }
+  }
+}
+```
+
+Without cloning, `uvx` can fetch the repo. This is **cached**, not a live feed of `main`:
+
+```json
+{
+  "mcpServers": {
+    "parallax": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/ASaiVivek/Parallax.git[mcp]",
+        "parallax-mcp"
+      ]
+    }
+  }
+}
+```
+
+To pick up new commits: `git pull` in the clone, or `uvx --refresh --from git+https://github.com/ASaiVivek/Parallax.git[mcp] parallax-mcp`, then **reload MCP** in the host. Later, a published PyPI version (`uvx --from parallax[mcp] parallax-mcp` with a version pin) is the honest path for many consumers.
+
+## Tools (CLI only)
+
+1. `parallax_interview` → remaining brief gaps
+2. `parallax_prepare` → isolated packets under `out`
+3. `parallax_synthesize` → `decision.json` from `reports/`
 
 The host remains responsible for isolated model calls. The tool must not run all offsets inside one LLM context.
+
+Remote / hosted HTTP MCP is deferred. Briefs should stay on the consumer machine.
 
 # Chatbot with no tools
 

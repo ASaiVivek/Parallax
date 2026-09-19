@@ -7,9 +7,9 @@ from typing import Optional
 import typer
 
 from .catalog import load_catalog, select_perspectives
-from .interview import apply_answers, assess_brief
+from .commands import UsageError, apply_roster, interview, prepare, synthesize
+from .interview import apply_answers
 from .models import DEFAULT_N, Brief
-from .workspace import prepare_workspace, synthesize_workspace
 
 app = typer.Typer(
     add_completion=False,
@@ -24,26 +24,10 @@ def _echo_json(payload: object) -> None:
         typer.echo(json.dumps(payload, indent=2))
 
 
-def _load_brief(brief: Optional[Path], question: Optional[str]) -> Brief:
-    if brief:
-        return Brief.model_validate_json(brief.read_text(encoding="utf-8"))
-    if question:
-        return Brief(question=question)
-    raise typer.BadParameter("Provide --brief or --question.")
-
-
-def _apply_roster(
-    brief: Brief,
-    upto: Optional[int],
-    exactly: Optional[int],
-) -> Brief:
-    if upto is not None and exactly is not None:
-        raise typer.BadParameter("Use either --upto or --exactly, not both.")
-    if exactly is not None:
-        return brief.model_copy(update={"roster_mode": "exactly", "roster_n": exactly})
-    if upto is not None:
-        return brief.model_copy(update={"roster_mode": "upto", "roster_n": upto})
-    return brief
+def _emit(result) -> None:
+    _echo_json(result.payload)
+    if result.exit_code:
+        raise typer.Exit(code=result.exit_code)
 
 
 @app.command("interview")
@@ -52,8 +36,10 @@ def interview_cmd(
     question: Optional[str] = typer.Option(None, help="Question if you have no brief file yet."),
 ) -> None:
     """Return remaining interview questions. Ready=false means do not run perspectives yet."""
-    result = assess_brief(_load_brief(brief, question))
-    _echo_json(result)
+    try:
+        _emit(interview(brief=brief, question=question))
+    except UsageError as exc:
+        raise typer.BadParameter(str(exc)) from exc
 
 
 @app.command("brief")
@@ -86,7 +72,10 @@ def brief_cmd(
             "extra_perspective_ids": extra,
         },
     )
-    built = _apply_roster(built, upto, exactly)
+    try:
+        built = apply_roster(built, upto, exactly)
+    except UsageError as exc:
+        raise typer.BadParameter(str(exc)) from exc
     text = built.model_dump_json(indent=2) + "\n"
     if out:
         out.write_text(text, encoding="utf-8")
@@ -131,21 +120,20 @@ def prepare_cmd(
     require_ready: bool = typer.Option(True, help="Refuse to prepare if interview gaps remain."),
 ) -> None:
     """Write isolated perspective packets. Each file is a complete, separate context."""
-    loaded = _apply_roster(_load_brief(brief, question), upto, exactly)
-    status = assess_brief(loaded)
-    if require_ready and not status.ready:
-        _echo_json({"error": "brief_not_ready", "interview": status.model_dump()})
-        raise typer.Exit(code=2)
-    dest = prepare_workspace(loaded, out, extra_dirs=catalog or None)
-    _echo_json(
-        {
-            "ok": True,
-            "work_dir": str(dest),
-            "manifest": str(dest / "manifest.json"),
-            "roster_mode": loaded.roster_mode,
-            "roster_n": loaded.roster_n,
-        }
-    )
+    try:
+        _emit(
+            prepare(
+                out=out,
+                brief=brief,
+                question=question,
+                upto=upto,
+                exactly=exactly,
+                catalog=catalog or None,
+                require_ready=require_ready,
+            )
+        )
+    except UsageError as exc:
+        raise typer.BadParameter(str(exc)) from exc
 
 
 @app.command("synthesize")
@@ -153,8 +141,7 @@ def synthesize_cmd(
     work_dir: Path = typer.Argument(..., exists=True, file_okay=False),
 ) -> None:
     """Merge isolated reports into one decision with dissent. Also refreshes synthesis_prompt.md."""
-    decision = synthesize_workspace(work_dir)
-    _echo_json(decision)
+    _emit(synthesize(work_dir))
 
 
 @app.command("catalog")
