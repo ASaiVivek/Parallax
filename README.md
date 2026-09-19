@@ -14,8 +14,8 @@ Parallax is not [llm-council](https://github.com/karpathy/llm-council). That des
 ## Install
 
 ```bash
-git clone <this-repository>
-cd parallax
+git clone https://github.com/ASaiVivek/Parallax.git
+cd Parallax
 uv sync
 source .venv/bin/activate
 parallax --help
