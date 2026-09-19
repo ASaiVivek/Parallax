@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from perspective_council.catalog import select_perspectives
-from perspective_council.interview import apply_answers, assess_brief
-from perspective_council.isolation import assert_packet_isolation
-from perspective_council.models import Brief, PerspectiveReport
-from perspective_council.packets import build_packets
-from perspective_council.synthesize import heuristic_decision
-from perspective_council.workspace import prepare_workspace, synthesize_workspace
+from parallax.catalog import select_perspectives
+from parallax.interview import apply_answers, assess_brief
+from parallax.isolation import assert_packet_isolation
+from parallax.models import Brief, PerspectiveReport
+from parallax.packets import build_packets
+from parallax.synthesize import heuristic_decision
+from parallax.workspace import prepare_workspace, synthesize_workspace
 
 
 def test_interview_blocks_empty_question():
@@ -18,7 +18,7 @@ def test_interview_blocks_empty_question():
 
 def test_interview_ready_when_minimum_filled():
     brief = Brief(
-        question="Should we expose the council as an MCP server?",
+        question="Should we expose Parallax as an MCP server?",
         user_claim="none",
         success_criteria=["Works in Cursor and Claude Code"],
         constraints=["No extra paid SaaS"],

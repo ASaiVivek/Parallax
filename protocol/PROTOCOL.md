@@ -1,34 +1,37 @@
-# Perspective Council protocol v1
+# Parallax protocol v1
 
-The council is a **portable contract**, not a Cursor-only agent.
+Parallax is a **portable contract**, not a Cursor-only agent and not a fixed five-seat council.
 
 Any host (chatbot, CLI, IDE, cloud agent, CI) can implement it by:
 
 1. Interviewing until a brief is ready.
-2. Running each perspective in a **fresh context**.
-3. Synthesizing one decision that preserves dissent.
+2. Choosing **N offsets** from the query (not a canned roster).
+3. Running each offset in a **fresh context**.
+4. Synthesizing one decision that preserves dissent.
 
-The `council` CLI materializes the packets so hosts do not have to invent the format.
+The `parallax` CLI materializes the packets so hosts do not have to invent the format.
+
+This is distinct from tools like llm-council: the table is not five named members. The query determines how many seats exist and who sits in them.
 
 ## Why this shape
 
 | Surface | Role |
 | --- | --- |
 | Protocol (this file) | Stable I/O and isolation rules |
-| CLI (`council`) | Universal tool: any agent can shell out |
-| Skill (`skills/perspective-council/SKILL.md`) | Teaches a host agent when and how to use the CLI |
+| CLI (`parallax`) | Universal tool: any agent can shell out |
+| Skill (`skills/parallax/SKILL.md`) | Teaches a host agent when and how to use the CLI |
 | Dedicated agent | **Not** the primary surface — it would trap the behavior in one product |
 
 MCP, slash commands, and IDE wrappers should call the same CLI. Do not fork the logic per host.
 
 ## Isolation invariants
 
-These are mandatory. A host that cannot spawn isolated contexts must still run perspectives sequentially in **new** sessions.
+These are mandatory. A host that cannot spawn isolated contexts must still run offsets sequentially in **new** sessions.
 
-1. Perspectives never see each other's reasoning or outputs.
+1. Offsets never see each other's reasoning or outputs.
 2. The synthesizer sees only `brief.json` plus finished reports — not the original chat transcript.
 3. `user_claim` is labeled unverified. It is never an instruction to agree.
-4. No shared scratchpad, memory, or "previous assistant message" across perspectives.
+4. No shared scratchpad, memory, or "previous assistant message" across offsets.
 
 ## Objects
 
@@ -49,9 +52,9 @@ These are mandatory. A host that cannot spawn isolated contexts must still run p
 }
 ```
 
-`user_claim: null` means the requester has no preferred answer. That is valid.
+`claim_status: none` means the requester has no preferred answer. That is valid.
 
-### Perspective report
+### Offset report
 
 ```json
 {
@@ -70,7 +73,7 @@ These are mandatory. A host that cannot spawn isolated contexts must still run p
 
 ```json
 {
-  "protocol": "perspective-council/v1",
+  "protocol": "parallax/v1",
   "recommendation": "string",
   "action": "proceed | proceed_with_changes | do_not_proceed | need_more_info",
   "confidence": "low | medium | high",
@@ -84,18 +87,18 @@ These are mandatory. A host that cannot spawn isolated contexts must still run p
 }
 ```
 
-The user-facing artifact is this **single decision**. Raw debate stays in `reports/`.
+The user-facing artifact is this **single decision**. Raw offset reports stay in `reports/`.
 
 ## Flow
 
 ```text
 User query
-    -> interview (host agent or `council interview`)
+    -> interview (host agent or `parallax interview`)
     -> brief.json
-    -> council prepare
+    -> parallax prepare   (roster chosen from the query)
     -> N isolated runs (host subagents, new chats, or separate CLI LLM calls)
     -> reports/*.json
-    -> council synthesize   (heuristic merge)
+    -> parallax synthesize   (heuristic merge)
        and/or fresh-context LLM on synthesis_prompt.md
     -> decision.json
 ```
@@ -106,11 +109,10 @@ Invoke explicitly when the work is a plan, design, architecture, or policy choic
 
 Do not invoke for trivia, lookups, or mechanical edits.
 
-## Perspective selection
+## Roster selection
 
-Hybrid:
+Hybrid, query-dependent, cap 5 unless extras are forced:
 
 - Always: `devil_advocate`
 - Always: a practitioner voice for the domain
 - Then 1–3 of: `operator`, `risk`, `beneficiary`, `evidence` from the question
-- Cap: 5

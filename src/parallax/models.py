@@ -48,7 +48,7 @@ class PerspectivePacket(BaseModel):
 
 
 class WorkManifest(BaseModel):
-    protocol: str = "perspective-council/v1"
+    protocol: str = "parallax/v1"
     brief: Brief
     perspectives: list[PerspectiveSpec]
     isolation_rules: list[str]
@@ -66,7 +66,7 @@ class PerspectiveReport(BaseModel):
 
 
 class Decision(BaseModel):
-    protocol: str = "perspective-council/v1"
+    protocol: str = "parallax/v1"
     recommendation: str
     action: Action
     confidence: Confidence

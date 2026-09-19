@@ -1,7 +1,7 @@
 # Agent instructions
 
-This repository is **Perspective Council**: a portable protocol + `council` CLI.
+This repository is **Parallax**: a portable protocol + `parallax` CLI.
 
-When the user asks for planning, design, or an opinionated decision — especially if they already have a preferred answer — follow [skills/perspective-council/SKILL.md](skills/perspective-council/SKILL.md). Keep perspectives isolated. Return one decision with dissent.
+When the user asks for planning, design, or an opinionated decision — especially if they already have a preferred answer — follow [skills/parallax/SKILL.md](skills/parallax/SKILL.md). Choose N isolated offsets from the query. Return one decision with dissent.
 
-Do not implement a host-specific fork. Call `council`.
+Do not implement a host-specific fork. Call `parallax`.

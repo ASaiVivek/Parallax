@@ -49,7 +49,7 @@ def prepare_workspace(brief: Brief, dest: Path, max_perspectives: int = 5) -> Pa
                 "1. For each file in `perspectives/*.md`, start a **new** chat/agent/CLI session.",
                 "2. Paste only that file. Do not include other perspectives or prior answers.",
                 "3. Save the JSON output to `reports/<perspective_id>.json`.",
-                "4. Run `council synthesize <this-dir>` or paste `synthesis_prompt.md` into a fresh session after substituting reports.",
+                "4. Run `parallax synthesize <this-dir>` or paste `synthesis_prompt.md` into a fresh session after substituting reports.",
                 "",
             ]
         ),

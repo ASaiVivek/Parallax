@@ -74,7 +74,7 @@ def select_perspectives(
     extra_ids: list[str] | None = None,
     max_perspectives: int = 5,
 ) -> list[PerspectiveSpec]:
-    """Hybrid council: always challenge + a domain voice; fill the rest from the query."""
+    """Hybrid roster: always challenge + a domain voice; fill the rest from the query."""
     text = _haystack(domain, question)
     chosen: list[str] = ["devil_advocate"]
 

@@ -2,7 +2,7 @@ from .models import Brief, InterviewGap, InterviewResult
 
 
 def assess_brief(brief: Brief) -> InterviewResult:
-    """Ask only for what the council cannot infer. Do not start isolated work until ready."""
+    """Ask only for what Parallax cannot infer. Do not start isolated work until ready."""
     gaps: list[InterviewGap] = []
     question = brief.question.strip()
     if not question:

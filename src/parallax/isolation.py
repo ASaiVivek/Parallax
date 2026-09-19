@@ -24,7 +24,7 @@ def assert_packet_isolation(brief: Brief, prompt: str) -> list[str]:
         if brief.user_claim in prompt.split("QUESTION", 1)[0]:
             # claim may appear later; it must not replace the question
             pass
-    if "You do not see other perspectives" not in prompt:
+    if "You do not see other offsets" not in prompt:
         problems.append("missing isolation sentence")
     return problems
 

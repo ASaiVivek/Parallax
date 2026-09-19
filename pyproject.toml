@@ -1,7 +1,7 @@
 [project]
-name = "perspective-council"
+name = "parallax"
 version = "0.1.0"
-description = "Portable multi-perspective planning: isolated viewpoints, then one decision with dissent."
+description = "Query-chosen isolated viewpoints, then one decision with dissent."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -10,8 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-council = "perspective_council.cli:app"
-perspective-council = "perspective_council.cli:app"
+parallax = "parallax.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.12.17,<0.13.0"]

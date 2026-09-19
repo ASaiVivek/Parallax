@@ -4,9 +4,9 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
-from perspective_council.cli import app
-from perspective_council.interview import apply_answers
-from perspective_council.models import Brief
+from parallax.cli import app
+from parallax.interview import apply_answers
+from parallax.models import Brief
 
 runner = CliRunner()
 

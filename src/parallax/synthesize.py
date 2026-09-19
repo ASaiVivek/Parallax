@@ -16,7 +16,7 @@ def heuristic_decision(brief: Brief, reports: list[PerspectiveReport]) -> Decisi
             recommendation="No isolated reports were provided.",
             action="need_more_info",
             confidence="low",
-            rationale=["The council cannot decide without perspective reports."],
+            rationale=["Parallax cannot decide without isolated offset reports."],
             dissent=[],
             risks=["Skipping isolation produces rubber-stamping."],
             changes_required=["Run each perspective packet in a fresh context."],
@@ -74,7 +74,7 @@ def heuristic_decision(brief: Brief, reports: list[PerspectiveReport]) -> Decisi
         lead = brief.user_claim if brief.claim_status == "stated" and brief.user_claim else reports[0].recommendation
         recommendation = f"Proceed: {lead}"
     elif action == "proceed_with_changes":
-        recommendation = "Proceed only with the revisions named by the council."
+        recommendation = "Proceed only with the revisions named by the isolated offsets."
         if brief.claim_status == "stated" and brief.user_claim:
             recommendation = f"Do not accept «{brief.user_claim}» unchanged. {recommendation}"
     else:

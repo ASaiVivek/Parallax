@@ -13,7 +13,7 @@ from .workspace import prepare_workspace, synthesize_workspace
 
 app = typer.Typer(
     add_completion=False,
-    help="Perspective Council — isolated viewpoints, then one decision with dissent.",
+    help="Parallax — query-chosen isolated viewpoints, then one decision with dissent.",
 )
 
 
@@ -120,7 +120,7 @@ def catalog_cmd() -> None:
 
 @app.callback()
 def main() -> None:
-    """Perspective Council CLI."""
+    """Parallax CLI."""
 
 
 if __name__ == "__main__":

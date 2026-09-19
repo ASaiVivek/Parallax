@@ -1,6 +1,6 @@
 from .models import Brief, PerspectivePacket, PerspectiveSpec, WorkManifest
 
-PROTOCOL_ID = "perspective-council/v1"
+PROTOCOL_ID = "parallax/v1"
 
 ISOLATION_RULES = [
     "Each perspective runs in a fresh context. Do not share chain-of-thought across perspectives.",
@@ -23,7 +23,7 @@ def render_prompt(brief: Brief, spec: PerspectiveSpec) -> str:
     domain = brief.domain or "unspecified"
     audience = brief.audience or "unspecified"
 
-    return f"""You are one isolated perspective in a council. You do not see other perspectives.
+    return f"""You are one isolated offset in a Parallax run. You do not see other offsets.
 Protocol: {PROTOCOL_ID}
 Perspective id: {spec.id}
 Title: {spec.title}
