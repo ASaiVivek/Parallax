@@ -1,0 +1,26 @@
+[project]
+name = "perspective-council"
+version = "0.1.0"
+description = "Portable multi-perspective planning: isolated viewpoints, then one decision with dissent."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.9",
+    "typer>=0.15",
+]
+
+[project.scripts]
+council = "perspective_council.cli:app"
+perspective-council = "perspective_council.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
