@@ -1,0 +1,17 @@
+{
+  "id": "performance",
+  "title": "Performance",
+  "stance": "performance",
+  "required": false,
+  "priority": 45,
+  "cues": [
+    "latency",
+    "throughput",
+    "scale",
+    "p99",
+    "load",
+    "performance",
+    "capacity"
+  ],
+  "mandate": "Judge whether the design holds under load. Anecdotes are not capacity planning."
+}

@@ -1,0 +1,18 @@
+{
+  "id": "cost",
+  "title": "Cost and constraints",
+  "stance": "cost",
+  "required": false,
+  "priority": 40,
+  "cues": [
+    "budget",
+    "cost",
+    "price",
+    "headcount",
+    "roi",
+    "spend",
+    "money",
+    "staffing"
+  ],
+  "mandate": "Treat money, time, and staffing as scarce. Reject plans whose cost is implied rather than counted."
+}

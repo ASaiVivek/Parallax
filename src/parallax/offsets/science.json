@@ -1,0 +1,18 @@
+{
+  "id": "science",
+  "title": "Scientific method",
+  "stance": "science",
+  "required": false,
+  "priority": 48,
+  "cues": [
+    "science",
+    "lab",
+    "clinical",
+    "medical",
+    "biology",
+    "chemistry",
+    "trial",
+    "hypothesis"
+  ],
+  "mandate": "Demand falsifiable claims, methods, and what evidence would change the conclusion."
+}

@@ -54,8 +54,12 @@ parallax brief \
 ### 2. Prepare isolated packets
 
 ```bash
-parallax prepare --brief brief.json --out .parallax/work
+parallax prepare --brief brief.json --out .parallax/work --upto 4
+# or lock a fixed table:
+# parallax prepare --brief brief.json --out .parallax/work --exactly 3
 ```
+
+Add or override perspectives with JSON files; see [catalog/README.md](../../catalog/README.md). The query only sits as many offsets as `--upto`/`--exactly` allow (default up to 4, hard cap 12).
 
 Each file in `.parallax/work/perspectives/` is a complete prompt. **One offset = one fresh context.**
 

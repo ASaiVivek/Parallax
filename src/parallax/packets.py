@@ -89,6 +89,8 @@ def build_manifest(brief: Brief, specs: list[PerspectiveSpec]) -> WorkManifest:
         brief=brief,
         perspectives=specs,
         isolation_rules=ISOLATION_RULES,
+        roster_mode=brief.roster_mode,
+        roster_n=brief.roster_n,
     )
 
 

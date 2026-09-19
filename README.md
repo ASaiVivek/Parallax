@@ -38,8 +38,11 @@ parallax brief \
   --fact "Current service is Python" \
   --out brief.json
 
-# 3. Materialize isolated prompts (roster is chosen from the query)
-parallax prepare --brief brief.json --out .parallax/work
+# 3. Materialize isolated prompts (query picks up to 4; use --exactly N for a fixed table)
+parallax prepare --brief brief.json --out .parallax/work --upto 4
+# parallax prepare --brief brief.json --out .parallax/work --exactly 3
+
+Add more perspectives as JSON: [catalog/README.md](catalog/README.md).
 
 # 4. Run each file in .parallax/work/perspectives/ in a BRAND-NEW context.
 #    Save JSON reports to .parallax/work/reports/<id>.json

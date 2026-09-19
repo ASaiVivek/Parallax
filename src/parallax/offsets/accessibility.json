@@ -1,0 +1,15 @@
+{
+  "id": "accessibility",
+  "title": "Accessibility",
+  "stance": "accessibility",
+  "required": false,
+  "priority": 48,
+  "cues": [
+    "a11y",
+    "accessibility",
+    "disability",
+    "wcag",
+    "assistive"
+  ],
+  "mandate": "If people cannot perceive, operate, or understand the result, the design has already failed."
+}

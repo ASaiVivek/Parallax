@@ -48,7 +48,9 @@ These are mandatory. A host that cannot spawn isolated contexts must still run o
   "facts": ["string"],
   "unknowns": ["string"],
   "audience": "string | null",
-  "extra_perspective_ids": ["devil_advocate"]
+  "extra_perspective_ids": ["science"],
+  "roster_mode": "upto",
+  "roster_n": 4
 }
 ```
 
@@ -111,8 +113,16 @@ Do not invoke for trivia, lookups, or mechanical edits.
 
 ## Roster selection
 
-Hybrid, query-dependent, cap 5 unless extras are forced:
+The catalog is a growing library of offsets (JSON files). Each run only uses a subset.
 
-- Always: `devil_advocate`
-- Always: a practitioner voice for the domain
-- Then 1–3 of: `operator`, `risk`, `beneficiary`, `evidence` from the question
+| Mode | Behavior |
+| --- | --- |
+| `upto` (default, N=4) | Cue-match the query, never more than N, never fewer than 2 |
+| `exactly` | Always N seats; fill by catalog priority if the query matches fewer |
+
+Hard cap: 12. Add offsets by dropping JSON into `src/parallax/offsets/`, `.parallax/offsets/`, or `--catalog`. See [catalog/README.md](../catalog/README.md).
+
+```json
+"roster_mode": "upto | exactly",
+"roster_n": 4
+```

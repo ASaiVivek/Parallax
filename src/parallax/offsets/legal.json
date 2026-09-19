@@ -1,0 +1,18 @@
+{
+  "id": "legal",
+  "title": "Legal and policy",
+  "stance": "legal",
+  "required": false,
+  "priority": 40,
+  "cues": [
+    "legal",
+    "policy",
+    "regulation",
+    "license",
+    "contract",
+    "gdpr",
+    "law",
+    "governance"
+  ],
+  "mandate": "Flag legal, policy, and contractual failure modes. Do not assume permission exists."
+}

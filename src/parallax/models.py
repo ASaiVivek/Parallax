@@ -1,11 +1,15 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 Position = Literal["support", "revise", "reject", "abstain"]
 Action = Literal["proceed", "proceed_with_changes", "do_not_proceed", "need_more_info"]
 Confidence = Literal["low", "medium", "high"]
-Stance = Literal["challenge", "build", "operate", "risk", "beneficiary", "evidence"]
+RosterMode = Literal["upto", "exactly"]
+
+MAX_ROSTER = 12
+DEFAULT_N = 4
+MIN_N = 2
 
 
 class Brief(BaseModel):
@@ -21,6 +25,17 @@ class Brief(BaseModel):
     unknowns: list[str] = Field(default_factory=list)
     audience: str | None = None
     extra_perspective_ids: list[str] = Field(default_factory=list)
+    roster_mode: RosterMode = "upto"
+    roster_n: int = DEFAULT_N
+
+    @field_validator("roster_n")
+    @classmethod
+    def _clamp_n(cls, value: int) -> int:
+        if value < 1:
+            raise ValueError("roster_n must be at least 1")
+        if value > MAX_ROSTER:
+            raise ValueError(f"roster_n must be <= {MAX_ROSTER} to avoid bloat")
+        return value
 
 
 class InterviewGap(BaseModel):
@@ -37,8 +52,11 @@ class InterviewResult(BaseModel):
 class PerspectiveSpec(BaseModel):
     id: str
     title: str
-    stance: Stance
+    stance: str
     mandate: str
+    cues: list[str] = Field(default_factory=list)
+    required: bool = False
+    priority: int = 50
 
 
 class PerspectivePacket(BaseModel):
@@ -52,6 +70,8 @@ class WorkManifest(BaseModel):
     brief: Brief
     perspectives: list[PerspectiveSpec]
     isolation_rules: list[str]
+    roster_mode: RosterMode = "upto"
+    roster_n: int = DEFAULT_N
 
 
 class PerspectiveReport(BaseModel):

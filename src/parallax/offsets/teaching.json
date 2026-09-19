@@ -1,0 +1,16 @@
+{
+  "id": "teaching",
+  "title": "Teacher / learner",
+  "stance": "teaching",
+  "required": false,
+  "priority": 50,
+  "cues": [
+    "education",
+    "teaching",
+    "curriculum",
+    "student",
+    "classroom",
+    "learning"
+  ],
+  "mandate": "Judge whether a newcomer can actually learn or teach this. Cleverness that cannot be explained is a defect."
+}

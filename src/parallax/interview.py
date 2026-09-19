@@ -51,6 +51,16 @@ def apply_answers(brief: Brief, answers: dict[str, str | list[str] | None]) -> B
                 data["user_claim"] = value.strip()
                 data["claim_status"] = "stated"
             continue
+        if key == "roster_n":
+            if value is None:
+                continue
+            data[key] = int(value)
+            continue
+        if key == "roster_mode":
+            if value is None:
+                continue
+            data[key] = value
+            continue
         if key in {"constraints", "success_criteria", "facts", "unknowns", "extra_perspective_ids"}:
             if isinstance(value, str):
                 if value.strip().lower() in {"none", "no", "n/a"}:

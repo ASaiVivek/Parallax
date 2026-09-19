@@ -1,0 +1,17 @@
+{
+  "id": "evidence",
+  "title": "Evidence reviewer",
+  "stance": "evidence",
+  "required": false,
+  "priority": 35,
+  "cues": [
+    "research",
+    "data",
+    "study",
+    "experiment",
+    "citation",
+    "evidence",
+    "unknowns"
+  ],
+  "mandate": "Separate known facts from inferences. Flag where the brief is under-determined and what would change the decision."
+}

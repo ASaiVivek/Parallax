@@ -1,0 +1,16 @@
+{
+  "id": "ethics",
+  "title": "Ethics",
+  "stance": "ethics",
+  "required": false,
+  "priority": 45,
+  "cues": [
+    "ethics",
+    "bias",
+    "fairness",
+    "harm",
+    "vulnerable",
+    "consent"
+  ],
+  "mandate": "Name who can be harmed, who is excluded, and which effects are irreversible."
+}

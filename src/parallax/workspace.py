@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Sequence
 
 from .catalog import select_perspectives
 from .models import Brief, Decision, PerspectiveReport
@@ -9,13 +10,19 @@ from .packets import build_manifest, build_packets, render_synthesis_prompt
 from .synthesize import heuristic_decision
 
 
-def prepare_workspace(brief: Brief, dest: Path, max_perspectives: int = 5) -> Path:
+def prepare_workspace(
+    brief: Brief,
+    dest: Path,
+    extra_dirs: Sequence[Path] | None = None,
+) -> Path:
     dest.mkdir(parents=True, exist_ok=True)
     specs = select_perspectives(
         brief.question,
         brief.domain,
         extra_ids=brief.extra_perspective_ids,
-        max_perspectives=max_perspectives,
+        mode=brief.roster_mode,
+        n=brief.roster_n,
+        extra_dirs=extra_dirs,
     )
     packets = build_packets(brief, specs)
     manifest = build_manifest(brief, specs)

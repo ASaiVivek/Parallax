@@ -1,0 +1,18 @@
+{
+  "id": "risk",
+  "title": "Risk and security",
+  "stance": "risk",
+  "required": false,
+  "priority": 25,
+  "cues": [
+    "security",
+    "auth",
+    "privacy",
+    "threat",
+    "compliance",
+    "secret",
+    "safety",
+    "abuse"
+  ],
+  "mandate": "Treat abuse, safety, privacy, legal exposure, and irreversible mistakes as first-class. Do not trade those away for convenience."
+}

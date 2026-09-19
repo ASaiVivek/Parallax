@@ -6,9 +6,9 @@ from typing import Optional
 
 import typer
 
-from .catalog import CATALOG, select_perspectives
+from .catalog import load_catalog, select_perspectives
 from .interview import apply_answers, assess_brief
-from .models import Brief
+from .models import DEFAULT_N, Brief
 from .workspace import prepare_workspace, synthesize_workspace
 
 app = typer.Typer(
@@ -32,6 +32,20 @@ def _load_brief(brief: Optional[Path], question: Optional[str]) -> Brief:
     raise typer.BadParameter("Provide --brief or --question.")
 
 
+def _apply_roster(
+    brief: Brief,
+    upto: Optional[int],
+    exactly: Optional[int],
+) -> Brief:
+    if upto is not None and exactly is not None:
+        raise typer.BadParameter("Use either --upto or --exactly, not both.")
+    if exactly is not None:
+        return brief.model_copy(update={"roster_mode": "exactly", "roster_n": exactly})
+    if upto is not None:
+        return brief.model_copy(update={"roster_mode": "upto", "roster_n": upto})
+    return brief
+
+
 @app.command("interview")
 def interview_cmd(
     brief: Optional[Path] = typer.Option(None, help="Path to brief JSON."),
@@ -52,6 +66,9 @@ def brief_cmd(
     fact: list[str] = typer.Option([], "--fact"),
     unknown: list[str] = typer.Option([], "--unknown"),
     audience: Optional[str] = typer.Option(None),
+    extra: list[str] = typer.Option([], "--extra", help="Force-include catalog ids."),
+    upto: Optional[int] = typer.Option(None, help="At most N offsets (default)."),
+    exactly: Optional[int] = typer.Option(None, help="Always N offsets."),
     out: Optional[Path] = typer.Option(None, help="Write brief JSON to this path."),
 ) -> None:
     """Create a brief. Use 'none' for user_claim when the requester has no preferred answer."""
@@ -66,8 +83,10 @@ def brief_cmd(
             "facts": fact,
             "unknowns": unknown,
             "audience": audience,
+            "extra_perspective_ids": extra,
         },
     )
+    built = _apply_roster(built, upto, exactly)
     text = built.model_dump_json(indent=2) + "\n"
     if out:
         out.write_text(text, encoding="utf-8")
@@ -79,10 +98,26 @@ def select_cmd(
     question: str = typer.Option(...),
     domain: Optional[str] = typer.Option(None),
     extra: list[str] = typer.Option([], "--extra", help="Catalog ids to force-include."),
+    upto: Optional[int] = typer.Option(None, help="Pick at most N offsets from the query (default 4)."),
+    exactly: Optional[int] = typer.Option(None, help="Always pick exactly N offsets."),
+    catalog: list[Path] = typer.Option([], "--catalog", help="Extra directory of offset JSON files."),
 ) -> None:
     """Show which isolated perspectives would run."""
-    specs = select_perspectives(question, domain, extra_ids=extra)
-    _echo_json([spec.model_dump() for spec in specs])
+    if upto is not None and exactly is not None:
+        raise typer.BadParameter("Use either --upto or --exactly, not both.")
+    if exactly is not None:
+        mode, n = "exactly", exactly
+    else:
+        mode, n = "upto", upto if upto is not None else DEFAULT_N
+    specs = select_perspectives(
+        question,
+        domain,
+        extra_ids=extra,
+        mode=mode,
+        n=n,
+        extra_dirs=catalog or None,
+    )
+    _echo_json([{"id": spec.id, "title": spec.title, "stance": spec.stance} for spec in specs])
 
 
 @app.command("prepare")
@@ -90,17 +125,27 @@ def prepare_cmd(
     out: Path = typer.Option(..., help="Directory to write the isolated work package."),
     brief: Optional[Path] = typer.Option(None),
     question: Optional[str] = typer.Option(None),
-    max_perspectives: int = typer.Option(5),
+    upto: Optional[int] = typer.Option(None, help="Pick at most N offsets (overrides the brief)."),
+    exactly: Optional[int] = typer.Option(None, help="Always pick exactly N offsets."),
+    catalog: list[Path] = typer.Option([], "--catalog", help="Extra directory of offset JSON files."),
     require_ready: bool = typer.Option(True, help="Refuse to prepare if interview gaps remain."),
 ) -> None:
     """Write isolated perspective packets. Each file is a complete, separate context."""
-    loaded = _load_brief(brief, question)
+    loaded = _apply_roster(_load_brief(brief, question), upto, exactly)
     status = assess_brief(loaded)
     if require_ready and not status.ready:
         _echo_json({"error": "brief_not_ready", "interview": status.model_dump()})
         raise typer.Exit(code=2)
-    dest = prepare_workspace(loaded, out, max_perspectives=max_perspectives)
-    _echo_json({"ok": True, "work_dir": str(dest), "manifest": str(dest / "manifest.json")})
+    dest = prepare_workspace(loaded, out, extra_dirs=catalog or None)
+    _echo_json(
+        {
+            "ok": True,
+            "work_dir": str(dest),
+            "manifest": str(dest / "manifest.json"),
+            "roster_mode": loaded.roster_mode,
+            "roster_n": loaded.roster_n,
+        }
+    )
 
 
 @app.command("synthesize")
@@ -113,9 +158,12 @@ def synthesize_cmd(
 
 
 @app.command("catalog")
-def catalog_cmd() -> None:
-    """List built-in perspective ids."""
-    _echo_json({pid: spec.model_dump() for pid, spec in CATALOG.items()})
+def catalog_cmd(
+    catalog: list[Path] = typer.Option([], "--catalog", help="Extra directory of offset JSON files."),
+) -> None:
+    """List perspective ids (builtin plus any drop-in catalogs)."""
+    merged = load_catalog(catalog or None)
+    _echo_json({pid: spec.model_dump() for pid, spec in merged.items()})
 
 
 @app.callback()

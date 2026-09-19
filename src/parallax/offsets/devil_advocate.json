@@ -1,0 +1,9 @@
+{
+  "id": "devil_advocate",
+  "title": "Devil's advocate",
+  "stance": "challenge",
+  "required": true,
+  "priority": 0,
+  "cues": [],
+  "mandate": "Assume the leading idea is wrong until evidence says otherwise. Hunt confirmation bias, hidden costs, and failure modes. You may support the claim only if you cannot honestly break it."
+}

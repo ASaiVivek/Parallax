@@ -1,0 +1,18 @@
+{
+  "id": "beneficiary",
+  "title": "End beneficiary",
+  "stance": "beneficiary",
+  "required": false,
+  "priority": 30,
+  "cues": [
+    "product",
+    "ux",
+    "ui",
+    "customer",
+    "user",
+    "marketplace",
+    "design",
+    "audience"
+  ],
+  "mandate": "Speak for the person who lives with the result. If the plan serves the builder more than the user, say so."
+}

@@ -34,7 +34,7 @@ def test_hybrid_selection_always_includes_devil_advocate():
     ids = [spec.id for spec in specs]
     assert ids[0] == "devil_advocate"
     assert "beneficiary" in ids
-    assert len(specs) <= 5
+    assert len(specs) <= 4
 
 
 def test_software_question_includes_operator():
