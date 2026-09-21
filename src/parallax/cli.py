@@ -7,9 +7,8 @@ from typing import Optional
 import typer
 
 from .catalog import load_catalog, select_perspectives
-from .commands import UsageError, apply_roster, interview, prepare, synthesize
-from .interview import apply_answers
-from .models import DEFAULT_N, Brief
+from .commands import UsageError, interview, prepare, synthesize, write_brief
+from .models import DEFAULT_N
 
 app = typer.Typer(
     add_completion=False,
@@ -58,28 +57,24 @@ def brief_cmd(
     out: Optional[Path] = typer.Option(None, help="Write brief JSON to this path."),
 ) -> None:
     """Create a brief. Use 'none' for user_claim when the requester has no preferred answer."""
-    built = Brief(question=question)
-    built = apply_answers(
-        built,
-        {
-            "domain": domain,
-            "user_claim": user_claim,
-            "constraints": constraint,
-            "success_criteria": criterion,
-            "facts": fact,
-            "unknowns": unknown,
-            "audience": audience,
-            "extra_perspective_ids": extra,
-        },
-    )
     try:
-        built = apply_roster(built, upto, exactly)
+        result = write_brief(
+            question=question,
+            domain=domain,
+            user_claim=user_claim,
+            constraints=constraint,
+            success_criteria=criterion,
+            facts=fact,
+            unknowns=unknown,
+            audience=audience,
+            extra_perspective_ids=extra,
+            upto=upto,
+            exactly=exactly,
+            out=out,
+        )
     except UsageError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    text = built.model_dump_json(indent=2) + "\n"
-    if out:
-        out.write_text(text, encoding="utf-8")
-    typer.echo(text, nl=False)
+    typer.echo(result.payload.model_dump_json(indent=2) + "\n", nl=False)
 
 
 @app.command("select")

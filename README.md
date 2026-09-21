@@ -95,7 +95,7 @@ question
 | `parallax prepare` | Write isolated prompt packets |
 | `parallax synthesize` | Merge reports into one decision |
 | `parallax catalog` | List builtin and drop-in offsets |
-| `parallax-mcp` | Local stdio MCP (optional extra `mcp`) wrapping interview / prepare / synthesize |
+| `parallax-mcp` | Local stdio MCP (optional extra `mcp`) wrapping interview / brief / prepare / synthesize |
 
 `--catalog DIR` (repeatable) and `PARALLAX_CATALOG_DIR` add extra offset directories. A later source **overrides** the same `id`.
 
@@ -114,9 +114,9 @@ Copy [`skills/parallax/SKILL.md`](skills/parallax/SKILL.md) into the host’s sk
 | Claude Code | `.claude/skills/parallax/SKILL.md` |
 | Codex / others | `AGENTS.md` or that product’s skill directory |
 
-The host must still run each `perspectives/*.md` file in a **separate** subagent or session. MCP or tool wrappers should expose `interview`, `prepare`, and `synthesize` as shells around this CLI — they must not run every offset in one model context.
+The host must still run each `perspectives/*.md` file in a **separate** subagent or session. MCP or tool wrappers should expose `interview`, `brief`, `prepare`, and `synthesize` as shells around this CLI — they must not run every offset in one model context.
 
-Optional **local stdio MCP** (`parallax-mcp`, extra `mcp`): install on the consumer machine; it wraps those three commands. Pushing this GitHub repo does **not** update their copy — they `git pull` / `uvx --refresh` / pin a published version, then reload MCP. Config snippets: [`adapters/README.md`](adapters/README.md). Wire format: [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md).
+Optional **local stdio MCP** (`parallax-mcp`, extra `mcp`): install on the consumer machine. Do **not** set MCP `cwd` to the Parallax clone or relative `.parallax/work` paths write into the tool repo — use `uv --directory` (see [`adapters/README.md`](adapters/README.md)). Pushing this GitHub repo does **not** update their copy — they `git pull` / `uvx --refresh` / pin a published version, then reload MCP. Wire format: [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md).
 
 ## Builtin offsets
 

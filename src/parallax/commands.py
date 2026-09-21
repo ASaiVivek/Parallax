@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
 
-from .interview import assess_brief
+from .interview import apply_answers, assess_brief
 from .models import Brief
 from .workspace import prepare_workspace, synthesize_workspace
 
@@ -26,7 +26,12 @@ class CommandResult:
 
 def load_brief(brief: Optional[Path], question: Optional[str]) -> Brief:
     if brief:
-        return Brief.model_validate_json(brief.read_text(encoding="utf-8"))
+        if not brief.is_file():
+            raise UsageError(f"Brief file not found: {brief}")
+        try:
+            return Brief.model_validate_json(brief.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise UsageError(f"Invalid brief JSON: {exc}") from exc
     if question:
         return Brief(question=question)
     raise UsageError("Provide brief or question.")
@@ -44,6 +49,41 @@ def apply_roster(
     if upto is not None:
         return brief.model_copy(update={"roster_mode": "upto", "roster_n": upto})
     return brief
+
+
+def write_brief(
+    *,
+    question: str,
+    domain: Optional[str] = None,
+    user_claim: Optional[str] = None,
+    constraints: Sequence[str] | None = None,
+    success_criteria: Sequence[str] | None = None,
+    facts: Sequence[str] | None = None,
+    unknowns: Sequence[str] | None = None,
+    audience: Optional[str] = None,
+    extra_perspective_ids: Sequence[str] | None = None,
+    upto: Optional[int] = None,
+    exactly: Optional[int] = None,
+    out: Optional[Path] = None,
+) -> CommandResult:
+    built = apply_answers(
+        Brief(question=question),
+        {
+            "domain": domain,
+            "user_claim": user_claim,
+            "constraints": list(constraints or []),
+            "success_criteria": list(success_criteria or []),
+            "facts": list(facts or []),
+            "unknowns": list(unknowns or []),
+            "audience": audience,
+            "extra_perspective_ids": list(extra_perspective_ids or []),
+        },
+    )
+    built = apply_roster(built, upto, exactly)
+    if out:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(built.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    return CommandResult(payload=built)
 
 
 def interview(*, brief: Optional[Path] = None, question: Optional[str] = None) -> CommandResult:
@@ -81,5 +121,9 @@ def prepare(
 
 
 def synthesize(work_dir: Path) -> CommandResult:
+    if not work_dir.is_dir():
+        raise UsageError(f"Work directory not found: {work_dir}")
+    if not (work_dir / "brief.json").is_file():
+        raise UsageError(f"brief.json not found in {work_dir}")
     decision = synthesize_workspace(work_dir)
     return CommandResult(payload=decision)

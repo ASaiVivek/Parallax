@@ -5,7 +5,7 @@ Copy [../../skills/parallax/SKILL.md](../../skills/parallax/SKILL.md) to `.curso
 Install the CLI so the agent can shell out:
 
 ```bash
-uv sync
+uv sync --extra mcp --group dev
 source .venv/bin/activate
 ```
 
@@ -23,6 +23,7 @@ Add the skill text to `AGENTS.md` or the product's skill slot. The contract is s
 
 ```bash
 parallax interview ...
+parallax brief ... --out brief.json
 parallax prepare --brief brief.json --out .parallax/work
 # isolated runs
 parallax synthesize .parallax/work
@@ -34,19 +35,41 @@ Parallax can also be a **local** MCP server on the consumer's machine. It wraps 
 
 A GitHub push does **not** update anyone's install. Each consumer upgrades on their machine, then reloads the MCP process in the host.
 
+**Cwd matters.** Relative paths (`brief.json`, `.parallax/work`) are resolved in the MCP process working directory. That should be the **user project**, not the Parallax clone. Use `uv --directory` to locate the package; do not set MCP `cwd` to the clone.
+
+GUI hosts (Cursor, Claude Desktop) often have a thin `PATH`. If `uv` is not found, use the absolute path to `uv` (or to `.venv/bin/parallax-mcp` after `uv sync --extra mcp`).
+
 ## What to add to the host
 
-Cursor (`~/.cursor/mcp.json` or project `.cursor/mcp.json`) and Claude Code use the same stdio shape:
+Cursor (`~/.cursor/mcp.json` or project `.cursor/mcp.json`) and Claude Code use the same stdio shape.
 
-From a clone (what you pull is what you run):
+From a clone (`uv --directory` keeps the host project as cwd):
 
 ```json
 {
   "mcpServers": {
     "parallax": {
       "command": "uv",
-      "args": ["run", "--extra", "mcp", "parallax-mcp"],
-      "cwd": "/absolute/path/to/Parallax"
+      "args": [
+        "--directory",
+        "/absolute/path/to/Parallax",
+        "run",
+        "--extra",
+        "mcp",
+        "parallax-mcp"
+      ]
+    }
+  }
+}
+```
+
+After `uv sync --extra mcp` in the clone, you can skip `uv run` and exec the venv script (still do **not** set `cwd` to the clone):
+
+```json
+{
+  "mcpServers": {
+    "parallax": {
+      "command": "/absolute/path/to/Parallax/.venv/bin/parallax-mcp"
     }
   }
 }
@@ -74,8 +97,9 @@ To pick up new commits: `git pull` in the clone, or `uvx --refresh --from git+ht
 ## Tools (CLI only)
 
 1. `parallax_interview` → remaining brief gaps
-2. `parallax_prepare` → isolated packets under `out`
-3. `parallax_synthesize` → `decision.json` from `reports/`
+2. `parallax_brief` → write `brief.json` (use `user_claim` `"none"` when there is no preference)
+3. `parallax_prepare` → isolated packets under `out` (prefer `.parallax/work` in the **user** project)
+4. `parallax_synthesize` → `decision.json` from `reports/`
 
 The host remains responsible for isolated model calls. The tool must not run all offsets inside one LLM context.
 

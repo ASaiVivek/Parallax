@@ -7,7 +7,7 @@ from typer.testing import CliRunner
 
 from parallax.cli import app
 from parallax.interview import apply_answers
-from parallax.mcp_server import create_server, interview_tool, prepare_tool, synthesize_tool
+from parallax.mcp_server import brief_tool, create_server, interview_tool, prepare_tool, synthesize_tool
 from parallax.models import Brief, PerspectiveReport
 from parallax.workspace import prepare_workspace
 
@@ -154,7 +154,113 @@ def test_synthesize_tool_keeps_dissent_from_isolated_reports(tmp_path: Path):
     assert any("rewrite" in item.lower() or "claim" in item.lower() for item in decision["dissent"] + [decision["recommendation"]])
 
 
-def test_stdio_server_registers_three_cli_tools():
+def test_brief_tool_matches_cli_and_writes_file(tmp_path: Path):
+    out = tmp_path / "nested" / "brief.json"
+    args = [
+        "brief",
+        "--question",
+        "CLI or MCP first?",
+        "--domain",
+        "software",
+        "--user-claim",
+        "none",
+        "--constraint",
+        "Must work in any IDE",
+        "--criterion",
+        "Any agent can invoke it",
+        "--out",
+        str(out),
+    ]
+    cli = runner.invoke(app, args)
+    assert cli.exit_code == 0, cli.stdout
+    tool = json.loads(
+        brief_tool(
+            question="CLI or MCP first?",
+            domain="software",
+            user_claim="none",
+            constraints=["Must work in any IDE"],
+            success_criteria=["Any agent can invoke it"],
+            out=str(out),
+        )
+    )
+    assert json.loads(cli.stdout) == tool
+    assert tool["claim_status"] == "none"
+    assert tool["user_claim"] is None
+    assert out.is_file()
+
+
+def test_interview_tool_reports_missing_brief_file(tmp_path: Path):
+    missing = tmp_path / "nope.json"
+    payload = json.loads(interview_tool(brief=str(missing)))
+    assert payload["error"] == "usage"
+    assert "not found" in payload["message"]
+
+
+def test_synthesize_tool_reports_missing_work_dir(tmp_path: Path):
+    payload = json.loads(synthesize_tool(str(tmp_path / "missing-work")))
+    assert payload["error"] == "usage"
+    assert "not found" in payload["message"]
+
+
+def test_stdio_server_registers_cli_tools():
     server = create_server()
     names = sorted(server._tool_manager._tools)
-    assert names == ["parallax_interview", "parallax_prepare", "parallax_synthesize"]
+    assert names == [
+        "parallax_brief",
+        "parallax_interview",
+        "parallax_prepare",
+        "parallax_synthesize",
+    ]
+
+
+def test_stdio_handshake_writes_into_process_cwd(tmp_path: Path):
+    import asyncio
+    import os
+    import sys
+
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    binary = Path(__file__).resolve().parents[1] / ".venv" / "bin" / "parallax-mcp"
+    if not binary.is_file():
+        binary = Path(sys.executable).resolve().parent / "parallax-mcp"
+    command = str(binary) if binary.is_file() else sys.executable
+    args = [] if binary.is_file() else ["-m", "parallax.mcp_server"]
+    assert binary.is_file() or command == sys.executable
+
+    async def run() -> None:
+        params = StdioServerParameters(
+            command=command,
+            args=args,
+            cwd=str(tmp_path),
+            env={**os.environ},
+        )
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                names = sorted(tool.name for tool in (await session.list_tools()).tools)
+                assert "parallax_brief" in names
+                brief = await session.call_tool(
+                    "parallax_brief",
+                    {
+                        "question": "Should local MCP be the install path?",
+                        "domain": "software",
+                        "user_claim": "none",
+                        "constraints": ["Stay on the consumer machine"],
+                        "success_criteria": ["Host can finish a run with MCP tools"],
+                        "out": "brief.json",
+                    },
+                )
+                assert brief.content
+                text = brief.content[0].text
+                assert json.loads(text)["claim_status"] == "none"
+                assert (tmp_path / "brief.json").is_file()
+                prep = await session.call_tool(
+                    "parallax_prepare",
+                    {"out": ".parallax/work", "brief": "brief.json"},
+                )
+                payload = json.loads(prep.content[0].text)
+                assert payload["ok"] is True
+                assert (tmp_path / ".parallax" / "work" / "perspectives").is_dir()
+
+    asyncio.run(run())

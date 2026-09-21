@@ -2,6 +2,10 @@
 
 Does not call models. Does not reimplement roster selection. Hosts still run
 each perspectives/*.md file in a fresh context, then call synthesize.
+
+Launch this process with the *user project* as cwd so relative paths like
+`.parallax/work` land in that project. Point uv at the Parallax checkout with
+`uv --directory /path/to/Parallax`, not by setting MCP cwd to the checkout.
 """
 
 from __future__ import annotations
@@ -10,7 +14,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from .commands import UsageError, interview, prepare, synthesize
+from .commands import UsageError, interview, prepare, synthesize, write_brief
 
 
 def _json(payload: object) -> str:
@@ -31,6 +35,41 @@ def interview_tool(question: Optional[str] = None, brief: Optional[str] = None) 
         result = interview(
             brief=Path(brief) if brief else None,
             question=question,
+        )
+    except UsageError as exc:
+        return _json({"error": "usage", "message": str(exc)})
+    return _json(result.payload)
+
+
+def brief_tool(
+    question: str,
+    domain: Optional[str] = None,
+    user_claim: Optional[str] = None,
+    constraints: Optional[list[str]] = None,
+    success_criteria: Optional[list[str]] = None,
+    facts: Optional[list[str]] = None,
+    unknowns: Optional[list[str]] = None,
+    audience: Optional[str] = None,
+    extra: Optional[list[str]] = None,
+    upto: Optional[int] = None,
+    exactly: Optional[int] = None,
+    out: Optional[str] = None,
+) -> str:
+    """Write a brief JSON object. Use user_claim 'none' when there is no preference."""
+    try:
+        result = write_brief(
+            question=question,
+            domain=domain,
+            user_claim=user_claim,
+            constraints=constraints,
+            success_criteria=success_criteria,
+            facts=facts,
+            unknowns=unknowns,
+            audience=audience,
+            extra_perspective_ids=extra,
+            upto=upto,
+            exactly=exactly,
+            out=Path(out) if out else None,
         )
     except UsageError as exc:
         return _json({"error": "usage", "message": str(exc)})
@@ -85,17 +124,52 @@ def create_server():
         "parallax",
         instructions=(
             "Local Parallax wrapper. Tools wrap the parallax CLI only. "
-            "Do not run every offset in one model context. After prepare, "
-            "the host must run each perspectives/*.md file in a fresh session "
-            "and write reports/<id>.json, then call synthesize. "
+            "Do not run every offset in one model context. "
+            "Flow: interview → brief (write brief.json) → prepare → "
+            "host runs each perspectives/*.md in a fresh session into "
+            "reports/<id>.json → synthesize. "
+            "Keep the MCP process cwd as the user project so relative paths "
+            "like .parallax/work stay in that project. "
             "Pushing GitHub does not update this process; reload after upgrade."
         ),
+        log_level="WARNING",
     )
 
     @server.tool(name="parallax_interview")
     def parallax_interview(question: Optional[str] = None, brief: Optional[str] = None) -> str:
         """Return remaining interview questions before isolated work may start."""
         return interview_tool(question=question, brief=brief)
+
+    @server.tool(name="parallax_brief")
+    def parallax_brief(
+        question: str,
+        domain: Optional[str] = None,
+        user_claim: Optional[str] = None,
+        constraints: Optional[list[str]] = None,
+        success_criteria: Optional[list[str]] = None,
+        facts: Optional[list[str]] = None,
+        unknowns: Optional[list[str]] = None,
+        audience: Optional[str] = None,
+        extra: Optional[list[str]] = None,
+        upto: Optional[int] = None,
+        exactly: Optional[int] = None,
+        out: Optional[str] = None,
+    ) -> str:
+        """Create brief.json. Pass user_claim 'none' when the requester has no preferred answer."""
+        return brief_tool(
+            question=question,
+            domain=domain,
+            user_claim=user_claim,
+            constraints=constraints,
+            success_criteria=success_criteria,
+            facts=facts,
+            unknowns=unknowns,
+            audience=audience,
+            extra=extra,
+            upto=upto,
+            exactly=exactly,
+            out=out,
+        )
 
     @server.tool(name="parallax_prepare")
     def parallax_prepare(
