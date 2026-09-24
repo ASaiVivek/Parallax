@@ -1,12 +1,30 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Sequence
+
+from pydantic import ValidationError
 
 from .catalog import select_perspectives
 from .models import Brief, Decision, PerspectiveReport
 from .packets import build_manifest, build_packets, render_synthesis_prompt
+
+
+class ReportLoadError(ValueError):
+    """A reports/*.json file is not a valid isolated offset report."""
+
+
+_FENCE = re.compile(r"^```(?:json)?\s*\n(.*)\n```\s*$", re.DOTALL | re.IGNORECASE)
+
+
+def _parse_report_text(text: str) -> object:
+    stripped = text.strip()
+    fenced = _FENCE.match(stripped)
+    if fenced:
+        stripped = fenced.group(1).strip()
+    return json.loads(stripped)
 from .synthesize import heuristic_decision
 
 
@@ -55,7 +73,7 @@ def prepare_workspace(
                 "",
                 "1. For each file in `perspectives/*.md`, start a **new** chat/agent/CLI session.",
                 "2. Paste only that file. Do not include other perspectives or prior answers.",
-                "3. Save the JSON output to `reports/<perspective_id>.json`.",
+                "3. Save the JSON output to `reports/<perspective_id>.json` (not `01-<id>.json`). Markdown fences are stripped if present.",
                 "4. Run `parallax synthesize <this-dir>` or paste `synthesis_prompt.md` into a fresh session after substituting reports.",
                 "",
             ]
@@ -67,11 +85,20 @@ def prepare_workspace(
 
 def load_reports(reports_dir: Path) -> list[PerspectiveReport]:
     reports: list[PerspectiveReport] = []
+    errors: list[str] = []
     if not reports_dir.exists():
         return reports
     for path in sorted(reports_dir.glob("*.json")):
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        reports.append(PerspectiveReport.model_validate(payload))
+        try:
+            payload = _parse_report_text(path.read_text(encoding="utf-8"))
+            reports.append(PerspectiveReport.model_validate(payload))
+        except (OSError, ValueError, ValidationError, json.JSONDecodeError) as exc:
+            errors.append(f"{path.name}: {exc}")
+    if errors:
+        raise ReportLoadError(
+            "Invalid report files (need isolated JSON with perspective_id and position): "
+            + "; ".join(errors)
+        )
     return reports
 
 

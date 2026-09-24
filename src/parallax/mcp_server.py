@@ -5,7 +5,8 @@ each perspectives/*.md file in a fresh context, then call synthesize.
 
 Launch this process with the *user project* as cwd so relative paths like
 `.parallax/work` land in that project. Point uv at the Parallax checkout with
-`uv --directory /path/to/Parallax`, not by setting MCP cwd to the checkout.
+`uv run --project /path/to/Parallax` (not `--directory`, which chdirs into the
+clone). Do not set MCP cwd to the checkout.
 """
 
 from __future__ import annotations
@@ -129,7 +130,8 @@ def create_server():
             "host runs each perspectives/*.md in a fresh session into "
             "reports/<id>.json → synthesize. "
             "Keep the MCP process cwd as the user project so relative paths "
-            "like .parallax/work stay in that project. "
+            "like .parallax/work stay in that project. Use uv run --project to "
+            "load this package without chdir. "
             "Pushing GitHub does not update this process; reload after upgrade."
         ),
         log_level="WARNING",

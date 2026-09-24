@@ -35,7 +35,9 @@ Parallax can also be a **local** MCP server on the consumer's machine. It wraps 
 
 A GitHub push does **not** update anyone's install. Each consumer upgrades on their machine, then reloads the MCP process in the host.
 
-**Cwd matters.** Relative paths (`brief.json`, `.parallax/work`) are resolved in the MCP process working directory. That should be the **user project**, not the Parallax clone. Use `uv --directory` to locate the package; do not set MCP `cwd` to the clone.
+**Cwd matters.** Relative paths (`brief.json`, `.parallax/work`) are resolved in the MCP process working directory. That should be the **user project**, not the Parallax clone.
+
+Do **not** use `uv --directory` / `uv run --directory`. That **changes the process cwd into the clone**, so `brief.json` and `.parallax/work` are written into Parallax itself. Use `uv run --project` (discovers the package, keeps the host cwd) or exec `.venv/bin/parallax-mcp`.
 
 GUI hosts (Cursor, Claude Desktop) often have a thin `PATH`. If `uv` is not found, use the absolute path to `uv` (or to `.venv/bin/parallax-mcp` after `uv sync --extra mcp`).
 
@@ -43,7 +45,7 @@ GUI hosts (Cursor, Claude Desktop) often have a thin `PATH`. If `uv` is not foun
 
 Cursor (`~/.cursor/mcp.json` or project `.cursor/mcp.json`) and Claude Code use the same stdio shape.
 
-From a clone (`uv --directory` keeps the host project as cwd):
+From a clone (`--project` keeps the host project as cwd):
 
 ```json
 {
@@ -51,9 +53,9 @@ From a clone (`uv --directory` keeps the host project as cwd):
     "parallax": {
       "command": "uv",
       "args": [
-        "--directory",
-        "/absolute/path/to/Parallax",
         "run",
+        "--project",
+        "/absolute/path/to/Parallax",
         "--extra",
         "mcp",
         "parallax-mcp"
