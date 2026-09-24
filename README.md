@@ -116,7 +116,7 @@ Copy [`skills/parallax/SKILL.md`](skills/parallax/SKILL.md) into the host’s sk
 
 The host must still run each `perspectives/*.md` file in a **separate** subagent or session. MCP or tool wrappers should expose `interview`, `brief`, `prepare`, and `synthesize` as shells around this CLI — they must not run every offset in one model context.
 
-Optional **local stdio MCP** (`parallax-mcp`, extra `mcp`): install on the consumer machine. Do **not** set MCP `cwd` to the Parallax clone or relative `.parallax/work` paths write into the tool repo — use `uv --directory` (see [`adapters/README.md`](adapters/README.md)). Pushing this GitHub repo does **not** update their copy — they `git pull` / `uvx --refresh` / pin a published version, then reload MCP. Wire format: [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md).
+Optional **local stdio MCP** (`parallax-mcp`, extra `mcp`): install on the consumer machine. Do **not** set MCP `cwd` to the Parallax clone, and do **not** launch with `uv --directory` — that chdirs into the clone so `.parallax/work` is written there. Use `uv run --project /path/to/Parallax` (see [`adapters/README.md`](adapters/README.md)). Pushing this GitHub repo does **not** update their copy — they `git pull` / `uvx --refresh` / pin a published version, then reload MCP. Wire format: [`protocol/PROTOCOL.md`](protocol/PROTOCOL.md).
 
 ## Builtin offsets
 

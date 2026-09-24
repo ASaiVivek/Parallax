@@ -11,7 +11,7 @@ from typing import Optional, Sequence
 
 from .interview import apply_answers, assess_brief
 from .models import Brief
-from .workspace import prepare_workspace, synthesize_workspace
+from .workspace import ReportLoadError, prepare_workspace, synthesize_workspace
 
 
 class UsageError(ValueError):
@@ -109,6 +109,20 @@ def prepare(
             exit_code=2,
         )
     dest = prepare_workspace(loaded, out, extra_dirs=catalog or None)
+    dest = dest.resolve()
+    packets = sorted((dest / "perspectives").glob("*.md"))
+    perspectives = []
+    for path in packets:
+        stem = path.stem
+        pid = stem.split("-", 1)[1] if "-" in stem else stem
+        perspectives.append(
+            {
+                "id": pid,
+                "filename": path.name,
+                "path": str(path),
+                "report": str(dest / "reports" / f"{pid}.json"),
+            }
+        )
     return CommandResult(
         payload={
             "ok": True,
@@ -116,6 +130,11 @@ def prepare(
             "manifest": str(dest / "manifest.json"),
             "roster_mode": loaded.roster_mode,
             "roster_n": loaded.roster_n,
+            "perspectives": perspectives,
+            "next": (
+                "Run each perspectives/*.md file in a fresh context. "
+                "Write reports/<id>.json (not the 01-id.md stem). Then synthesize."
+            ),
         }
     )
 
@@ -125,5 +144,8 @@ def synthesize(work_dir: Path) -> CommandResult:
         raise UsageError(f"Work directory not found: {work_dir}")
     if not (work_dir / "brief.json").is_file():
         raise UsageError(f"brief.json not found in {work_dir}")
-    decision = synthesize_workspace(work_dir)
+    try:
+        decision = synthesize_workspace(work_dir)
+    except ReportLoadError as exc:
+        raise UsageError(str(exc)) from exc
     return CommandResult(payload=decision)

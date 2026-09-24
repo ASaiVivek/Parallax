@@ -136,7 +136,10 @@ def synthesize_cmd(
     work_dir: Path = typer.Argument(..., exists=True, file_okay=False),
 ) -> None:
     """Merge isolated reports into one decision with dissent. Also refreshes synthesis_prompt.md."""
-    _emit(synthesize(work_dir))
+    try:
+        _emit(synthesize(work_dir))
+    except UsageError as exc:
+        raise typer.BadParameter(str(exc)) from exc
 
 
 @app.command("catalog")

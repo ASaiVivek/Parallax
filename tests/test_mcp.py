@@ -105,6 +105,8 @@ def test_prepare_tool_respects_upto_with_drop_in_catalog(tmp_path: Path):
     )
     assert payload["ok"] is True
     assert payload["roster_n"] == 4
+    assert payload["perspectives"]
+    assert all("id" in item and "filename" in item and "report" in item for item in payload["perspectives"])
     packets = list((work / "perspectives").glob("*.md"))
     ids = [path.stem.split("-", 1)[1] for path in packets]
     assert "regulator" in ids
@@ -261,6 +263,112 @@ def test_stdio_handshake_writes_into_process_cwd(tmp_path: Path):
                 )
                 payload = json.loads(prep.content[0].text)
                 assert payload["ok"] is True
+                assert payload["perspectives"]
                 assert (tmp_path / ".parallax" / "work" / "perspectives").is_dir()
+                for item in payload["perspectives"]:
+                    packet = tmp_path / ".parallax" / "work" / "perspectives" / item["filename"]
+                    assert packet.is_file()
+                    pid = item["id"]
+                    report = {
+                        "perspective_id": pid,
+                        "position": "revise",
+                        "recommendation": "Keep CLI primary; MCP is a wrapper.",
+                        "risks": ["cwd mistakes"],
+                        "dissent_from_user_claim": "Do not skip the CLI.",
+                        "confidence": "high",
+                    }
+                    (tmp_path / ".parallax" / "work" / "reports" / f"{pid}.json").write_text(
+                        "```json\n" + json.dumps(report) + "\n```\n",
+                        encoding="utf-8",
+                    )
+                syn = await session.call_tool(
+                    "parallax_synthesize",
+                    {"work_dir": ".parallax/work"},
+                )
+                decision = json.loads(syn.content[0].text)
+                assert decision["protocol"] == "parallax/v1"
+                assert decision["action"] in {"proceed", "proceed_with_changes", "do_not_proceed"}
+                assert decision["perspective_tally"]
+
+    asyncio.run(run())
+
+
+def test_synthesize_accepts_markdown_fenced_reports(tmp_path: Path):
+    brief_path = _ready_brief(tmp_path)
+    work = tmp_path / "work"
+    payload = json.loads(prepare_tool(out=str(work), brief=str(brief_path)))
+    pid = payload["perspectives"][0]["id"]
+    report = {
+        "perspective_id": pid,
+        "position": "reject",
+        "recommendation": "Keep the CLI.",
+        "dissent_from_user_claim": "MCP-only is a trap.",
+        "risks": ["host lock-in"],
+        "confidence": "high",
+    }
+    (work / "reports" / f"{pid}.json").write_text(
+        "```json\n" + json.dumps(report) + "\n```\n",
+        encoding="utf-8",
+    )
+    decision = json.loads(synthesize_tool(str(work)))
+    assert decision["action"] == "do_not_proceed"
+    assert pid in decision["perspective_tally"]
+
+
+def test_synthesize_rejects_garbage_report_json(tmp_path: Path):
+    brief_path = _ready_brief(tmp_path)
+    work = tmp_path / "work"
+    json.loads(prepare_tool(out=str(work), brief=str(brief_path)))
+    (work / "reports" / "junk.json").write_text("{not json", encoding="utf-8")
+    payload = json.loads(synthesize_tool(str(work)))
+    assert payload["error"] == "usage"
+    assert "junk.json" in payload["message"]
+
+
+def test_uv_project_launch_keeps_user_project_cwd(tmp_path: Path):
+    import asyncio
+    import os
+    import shutil
+
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    uv = shutil.which("uv") or str(Path.home() / ".local/bin" / "uv")
+    assert Path(uv).is_file(), "uv is required for the documented MCP launch"
+    clone = Path(__file__).resolve().parents[1]
+
+    async def run() -> None:
+        params = StdioServerParameters(
+            command=str(uv),
+            args=["run", "--project", str(clone), "--extra", "mcp", "parallax-mcp"],
+            cwd=str(tmp_path),
+            env={**os.environ, "PATH": os.environ.get("PATH", "")},
+        )
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                await session.call_tool(
+                    "parallax_brief",
+                    {
+                        "question": "Should uv --directory be used to launch MCP?",
+                        "domain": "software",
+                        "user_claim": "Yes, --directory is the right flag.",
+                        "constraints": ["Files must land in the user project"],
+                        "success_criteria": ["brief.json is in the host cwd"],
+                        "out": "brief.json",
+                    },
+                )
+                assert (tmp_path / "brief.json").is_file()
+                assert not (clone / "brief.json").exists()
+                prep = await session.call_tool(
+                    "parallax_prepare",
+                    {"out": ".parallax/work", "brief": "brief.json"},
+                )
+                payload = json.loads(prep.content[0].text)
+                assert payload["ok"] is True
+                assert Path(payload["work_dir"]).is_absolute()
+                assert Path(payload["work_dir"]).is_relative_to(tmp_path)
+                assert (tmp_path / ".parallax" / "work" / "perspectives").is_dir()
+                assert not (clone / ".parallax" / "work").exists()
 
     asyncio.run(run())
