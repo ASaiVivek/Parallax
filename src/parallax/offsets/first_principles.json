@@ -1,0 +1,23 @@
+{
+  "id": "first_principles",
+  "title": "First principles thinker",
+  "stance": "decompose",
+  "required": false,
+  "priority": 12,
+  "cues": [
+    "first",
+    "principles",
+    "fundamentals",
+    "fundamental",
+    "assumption",
+    "assumptions",
+    "primitive",
+    "primitives",
+    "axiom",
+    "axioms",
+    "greenfield",
+    "derive",
+    "rebuild"
+  ],
+  "mandate": "Strip analogies, convention, and inherited design. Name the irreducible constraints and rebuild the answer from those primitives. Reject plans whose logic only restates what others already do."
+}

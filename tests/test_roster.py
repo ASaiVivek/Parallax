@@ -18,6 +18,24 @@ def test_exactly_locks_count():
     assert specs[0].id == "devil_advocate"
 
 
+def test_first_principles_sits_on_fundamentals_question():
+    specs = select_perspectives(
+        "Rebuild this service from first principles; list hidden assumptions",
+        domain="software",
+        mode="upto",
+        n=4,
+    )
+    ids = [spec.id for spec in specs]
+    assert "first_principles" in ids
+    assert len(specs) <= 4
+
+
+def test_first_principles_stays_out_on_unrelated_query():
+    specs = select_perspectives("What color should the icon be?", mode="upto", n=4)
+    ids = [spec.id for spec in specs]
+    assert "first_principles" not in ids
+
+
 def test_software_query_picks_operator_within_cap():
     specs = select_perspectives(
         "Design the rollout for this API",
