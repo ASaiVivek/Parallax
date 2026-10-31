@@ -131,6 +131,7 @@ These ship in [`src/parallax/offsets/`](src/parallax/offsets/). A run only sits 
 | `domain_practitioner` | Domain practitioner | no | 10 | practice, craft, implementation |
 | `ethics` | Ethics | no | 45 | ethics, bias, fairness, harm |
 | `evidence` | Evidence reviewer | no | 35 | research, data, study, experiment |
+| `first_principles` | First principles thinker | no | 12 | first, principles, fundamentals, assumption, greenfield |
 | `legal` | Legal and policy | no | 40 | legal, policy, regulation, gdpr |
 | `operator` | Operator | no | 20 | software, api, infra, deploy, sre |
 | `performance` | Performance | no | 45 | latency, throughput, scale, p99 |
